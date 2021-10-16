@@ -38,10 +38,10 @@ return:
 DinoMain:
 	JSR Graphics
 	LDA $9D					;\ leave if sprites are locked
-	BNE return				;|
+	BNE .return				;|
 	LDA !14C8,x				;| or status is anything other than normal
 	CMP #$08				;|
-	BNE return				;/
+	BNE .return				;/
 	%SubOffScreen()
 	JSL $01A7DC				;mario interaction
 	JSL $01802A				;update position w/t gravity + block interaction
@@ -52,7 +52,10 @@ DinoMain:
 	dw Spitting_Fire
 	dw Spitting_Fire
 	dw Airborne
-
+	
+.return
+	RTS
+	
 ; based on blocked status from left to right:
 ; not touching anything, right only, left only
 ; technically, a 4th value is possible if the dino is stuck inside a block
