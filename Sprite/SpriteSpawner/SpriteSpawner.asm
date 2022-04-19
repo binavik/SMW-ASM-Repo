@@ -11,13 +11,13 @@
 ;E: Spawned sprite extra bit.
 ;M: Draw meter
 ;D: Don't despawn offscreen
-;C: Shoot on coins 
-;S: Single shot, only shoot a new sprite when the old one despawns. 
+;C: Shoot on coins
+;S: Single shot, only shoot a new sprite when the old one despawns.
 
 ;Extra Byte 2: Frequency, how often to fire the sprite
 ;Extra Byte 3: what sprite number to spawn
 
-;Some sprites do not call the update position routine, this sprite can if 
+;Some sprites do not call the update position routine, this sprite can if
 ;bit 7 from Extra Byte 1 is set. Please note that enabling Gravity will
 ;enable it for both the X and Y direction and checks for block interactions
 ;Extra Byte 4: initial state, follows $14C8 settings and additional toggles:
@@ -104,11 +104,11 @@ print "INIT ",pc
 	INY
 	LDA [$00],y
 	STA !y_offset,x
-	INY 
-	LDA [$00],y
-	STA !extrabyte_1,x 
 	INY
-	LDA [$00],y 
+	LDA [$00],y
+	STA !extrabyte_1,x
+	INY
+	LDA [$00],y
 	STA !extrabyte_2,x
 	INY
 	LDA [$00],y
@@ -126,9 +126,9 @@ print "INIT ",pc
 	BEQ .no_follow_y		;/
 	JSR MoveY
 .no_follow_y
-	LDA #$FF					
+	LDA #$FF
 	STA !spawned_sprite_backup,x
-	STZ !coins					
+	STZ !coins
 	STZ !switch
 .finish_init
 RTL
@@ -137,29 +137,29 @@ print "MAIN ",pc
 	JSR SpriteMain
 	PLB
 RTL
-	
+
 MoveX:
 	STZ $01					;\
 	LDA !x_offset,x		;| Get distance to move displace the sprite
 	BPL +					;|
 	DEC $01					;|
 +							;|
-	CLC						;| 
+	CLC						;|
 	ADC $D1					;| Set up distance to move it
 	STA $00					;|
 	LDA $01					;|
 	ADC $D2					;|
 	STA $01					;|
 	LDA $00					;|
-	STA !E4,x				;| add to 
+	STA !E4,x				;| add to
 	LDA $01					;|
 	STA !14E0,x				;/
 	RTS
-	
+
 ;same as above but for Y
 MoveY:
-	STZ $01					
-	LDA !y_offset,x		
+	STZ $01
+	LDA !y_offset,x
 	BPL +
 	DEC $01
 +
@@ -174,12 +174,12 @@ MoveY:
 	LDA $01
 	STA !14D4,x
 	RTS
-	
+
 CheckAlive:
 	LDY !spawned_sprite_backup,x	;\ check ram if sprite slot is set from
 	BMI .not_alive					;| previous spawn
 	LDA !14C8,y						;|
-	BEQ .not_alive					;| 14C8 = #$00, open slot, we can fire 
+	BEQ .not_alive					;| 14C8 = #$00, open slot, we can fire
 	CMP #$01						;| 14C8 = #$01, just spawning, don't fire
 	BEQ .alive						;|
 	;LDA !14C8,y						;|
@@ -191,7 +191,7 @@ CheckAlive:
 	BEQ .check_x					;|
 	PHX
 	TYX
-	JSL $01802A						;| update x and y with gravity
+	JSL $01802A|!bank						;| update x and y with gravity
 	PLX
 .check_x							;|
 	LDA !settings2_and_state,x		;|
@@ -199,7 +199,7 @@ CheckAlive:
 	BEQ .check_y					;|
 	PHX
 	TYX
-	JSL $018022						;| update x without gravity + object interaction
+	JSL $018022|!bank						;| update x without gravity + object interaction
 	PLX
 .check_y							;|
 	LDA !settings2_and_state,x		;|
@@ -207,7 +207,7 @@ CheckAlive:
 	BEQ .finished					;|
 	PHX
 	TYX
-	JSL $01801A						;| update y withough gravity + object interaction
+	JSL $01801A|!bank						;| update y withough gravity + object interaction
 	PLX
 .finished							;|
 	SEC								;|
@@ -226,7 +226,7 @@ SpriteMain:
 	%SubOffScreen()			;/
 .no_SubOffScreen
 	LDA !settings1,x		;\ check if we should draw graphic
-	AND #$01				;| 
+	AND #$01				;|
 	BEQ .no_graphics		;|
 	JSR Graphics			;/
 .no_graphics
@@ -235,9 +235,9 @@ SpriteMain:
 	BEQ .continue			;/
 	RTS
 .continue
-	JSL $019138				; interact with objects
+	JSL $019138|!bank				; interact with objects
 	LDA !timerRAM,x
-	INC 
+	INC
 	STA $0F
 	LDA !settings1,x		;\
 	AND #$02				;| check to follow mario in X direction
@@ -250,7 +250,7 @@ SpriteMain:
 	JSR MoveY
 .no_follow_y
 	LDA !settings2_and_state,x	;\ check the active on switch state setting
-	AND #$10					;| 
+	AND #$10					;|
 	BEQ .check_coins			;|
 	LDA !switch					;|
 	BEQ .check_coins			;|
@@ -277,11 +277,11 @@ SpriteMain:
 	BEQ .final_check		;|
 	INC !timerRAM,x			;/
 .final_check
-	LDA !timerRAM,x			;\ time to shoot yet? 
+	LDA !timerRAM,x			;\ time to shoot yet?
 	BEQ Shoot				;/
 Return:
 	RTS
-	
+
 Shoot:
 	LDA !7FAB10,x			;\ check extra bit for custom or normal sprite
 	AND #$04				;|
@@ -298,24 +298,24 @@ Shoot:
 	JMP .return
 +
 	LDA !settings1,x			;\ backup the sprite if we need to
-	AND #$80					;| 
+	AND #$80					;|
 	BEQ ++			 			;|
 	TYA							;|
 	STA !spawned_sprite_backup,x;/
 ++
 	LDA #!SoundEffect		;\ Play sound effect
-	STA !SFXPort|!Base2		;/	
-	
+	STA !SFXPort|!Base2		;/
+
 	TYA
 	STA !spawned_sprite_backup,x
-	
+
 	LDA !settings2_and_state,x		;\ initial state
 	AND #$0F				;| only need lower 4 bits
 	STA !14C8,y				;/
-	
+
 	;%SpawnSprite randomly fucks with settings when spawning a custom sprite with this
 	;I have no idea why
-	LDA !D8,x				;\ Initial Y position 
+	LDA !D8,x				;\ Initial Y position
 	STA !D8,y				;| Low byte
 	LDA !14D4,x				;|
 	STA !14D4,y				;| High byte
@@ -330,7 +330,7 @@ Shoot:
 
 	LDA !7FAB10,x			;\ check extra bit for custom or normal sprite
 	AND #$04				;|
-	BEQ .finishSpawn		;/ 
+	BEQ .finishSpawn		;/
 	LDA !extrabyte_1,x		;\ can't do STA !extra_byte_1,y so need to swap registers
 	PHA						;| backup what we can first
 	LDA !extrabyte_2,x		;|
@@ -340,10 +340,10 @@ Shoot:
 	LDA !extrabyte_4,x		;|
 	PHA						;|
 	TYX						;|
-	PLA						;| 
-	STA !extra_byte_4,x		;| 
 	PLA						;|
-	STA !extra_byte_3,x		;| 
+	STA !extra_byte_4,x		;|
+	PLA						;|
+	STA !extra_byte_3,x		;|
 	PLA						;|
 	STA !extra_byte_2,x		;|
 	PLA						;|
@@ -386,19 +386,19 @@ Graphics:
 	STA $0301|!Base2,y
 	LDA !tile
 	STA $0302|!Base2,y
-	LDA !tile_prop		
+	LDA !tile_prop
 	STA $0303|!Base2,y
 	LDY #$02
 	LDA #$00
 	JSL $01B7B3|!BankB
-	
+
 	LDA !settings1,x
 	AND #$10
 	BEQ .no_draw_meter
 	JSR DrawMeter
 .no_draw_meter
 	RTS
-	
+
 ;Thanks to Fernap
 DrawMeter:
 	; compute (val / max) * (8 * size) = (val * size * 8) / max for the number of filled pixels in the meter
@@ -417,7 +417,7 @@ DrawMeter:
     nop #8                  ; wait
 
     lda $4214               ; quotient low
-	
+
 ;------
 ; Graphics routine
 ;------
@@ -427,8 +427,8 @@ DrawMeter:
 
 ; passed number of full pixels to draw in A
 SpriteGraphics:
-  sta $0d                                               ; set up temp stuff
-  lda !MeterSize : sta $0f
+  sta $0D                                               ; set up temp stuff
+  lda !MeterSize : sta $0F
 
   stz $01                                               ; x offset + sprite x -> tile x
   lda !MeterXOffset
@@ -447,8 +447,8 @@ SpriteGraphics:
   lda $03 : adc !sprite_y_high,x : sta $03
 
   rep #$20
-  lda $00 : sec : sbc $1a : sta $00                    ; and minus screen boundaries
-  lda $02 : sec : sbc $1c : sta $02
+  lda $00 : sec : sbc $1A : sta $00                    ; and minus screen boundaries
+  lda $02 : sec : sbc $1C : sta $02
   sep #$20
 
   lda !tile_prop
@@ -467,20 +467,20 @@ SpriteGraphics:
   lda $00 : clc : adc #$08 : sta $00    ; if horizontal, add 8 to x
   lda $01 : adc #$00 : sta $01
 ++:
-  lda $0f
+  lda $0F
   beq .EndLoop
 
 ; if pixels >= 8, use 8 as the tile index, subtract 8
 ; if pixels <= 8, use pixels as the tile index, set to 0
-  lda $0d
+  lda $0D
   cmp #$08
   bcc +
   ldy #$08                  ; pixels >= 8
-  sec : sbc #$08 : sta $0d
+  sec : sbc #$08 : sta $0D
   bra ++
 +:
   tay                       ; pixels < 8
-  stz $0d
+  stz $0D
 ++:
 
   lda MeterTiles,y
@@ -488,7 +488,7 @@ SpriteGraphics:
 
   jsr DrawTile
 
-  dec $0f
+  dec $0F
   bra .Loop
 
 .EndLoop:
