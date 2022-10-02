@@ -190,6 +190,7 @@ endif
 if !only_shoot_while_falling
 	LDA $7D
 	BMI .return
+endif
 if !extended_sprite == 05
 	LDX #$0A
 else
