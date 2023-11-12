@@ -33,9 +33,9 @@ org $019035
 	autoclean JML check_grav_position
 	NOP
 	
-org $01AC07
-	autoclean JSL update_mario_pos
-	NOP
+;org $01AC07
+;	autoclean JSL update_mario_pos
+;	NOP
 
 freecode
 prot Kick_Speed_X
@@ -73,7 +73,7 @@ Pointers:
 	dw Bumpty
 	dw Water
 	dw Carry
-	dw Nets
+;	dw Nets
 PointerEnd:						;needed for above calculation
 
 
@@ -228,43 +228,43 @@ Water:
 	STA !additional_ram|!addr	;| a separate hijack below handles making mario swim
 	BRA Re						;|
 
-Nets:
-	LDA $1470|!addr					;\ if holding something
-	ORA $187A|!addr					;| or riding yoshi
-	BNE Re							;/ don't climb
-	LDA !additional_ram|!addr		; skip ahead of flag is clear
-	BMI +
-	CPX !additional_ram|!addr		;\ if mario is climbing on another sprite
-	BNE Re							;/ return
-+
-	LDA !additional_sprite_table,x	;\ if already climbing on this sprite
-	BNE Skip_button_check			;/ skip button check
-	LDA $15							;\ if up or down not pressed this frame
-	AND #%00001100					;|
-	BEQ Re							;/ return
-	LDA #!climbing_frames			;\
-	STA !additional_sprite_table,x	;|
-	STA $18BE|!addr					;| otherwise start climbing
-	TXA								;|
-	STA !additional_ram|!addr		;/
-Skip_button_check:
-	LDA $16							;\ jump off if B is pressed
-	AND #$80						;/ 
-	BEQ .climb
-	LDA #!climb_jump
-	STA $7D
-	LDA #$00
-	STA !additional_sprite_table,x
-	STA $18BE|!addr
-	LDA #$FF
-	STA !additional_ram|!addr
-	BRA Re
-.climb
-	LDA #!climbing_frames			;\
-	STA !additional_sprite_table,x	;|
-	STA $18BE|!addr					;| continue climbing
-	TXA								;|
-	STA !additional_ram|!addr		;/
+;Nets:
+;	LDA $1470|!addr					;\ if holding something
+;	ORA $187A|!addr					;| or riding yoshi
+;	BNE Re							;/ don't climb
+;	LDA !additional_ram|!addr		; skip ahead of flag is clear
+;	BMI +
+;	CPX !additional_ram|!addr		;\ if mario is climbing on another sprite
+;	BNE Re							;/ return
+;+
+;	LDA !additional_sprite_table,x	;\ if already climbing on this sprite
+;	BNE Skip_button_check			;/ skip button check
+;	LDA $15							;\ if up or down not pressed this frame
+;	AND #%00001100					;|
+;	BEQ Re							;/ return
+;	LDA #!climbing_frames			;\
+;	STA !additional_sprite_table,x	;|
+;	STA $18BE|!addr					;| otherwise start climbing
+;	TXA								;|
+;	STA !additional_ram|!addr		;/
+;Skip_button_check:
+;	LDA $16							;\ jump off if B is pressed
+;	AND #$80						;/ 
+;	BEQ .climb
+;	LDA #!climb_jump
+;	STA $7D
+;	LDA #$00
+;	STA !additional_sprite_table,x
+;	STA $18BE|!addr
+;	LDA #$FF
+;	STA !additional_ram|!addr
+;	BRA Re
+;.climb
+;	LDA #!climbing_frames			;\
+;	STA !additional_sprite_table,x	;|
+;	STA $18BE|!addr					;| continue climbing
+;	TXA								;|
+;	STA !additional_ram|!addr		;/
 Re:
 	JML $01A7F5
 	
